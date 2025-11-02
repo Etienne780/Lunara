@@ -13,6 +13,7 @@ namespace SDLCore {
 
 	class Version {
 	public:
+		Version() = default;
 		Version(unsigned int version);
 		Version(unsigned int major, unsigned int minor);
 		Version(unsigned int major, unsigned int minor, unsigned int patch);
