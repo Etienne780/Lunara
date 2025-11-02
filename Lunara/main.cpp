@@ -7,7 +7,12 @@ int main() {
 	Lunara lunara;
 
 	SDLCore::SDLResult result = lunara.Start();
-	Log::Info(SDLCore::GetError(result));
+
+	std::string msg = SDLCore::GetError(result);
+	if(result == 0)
+		Log::Info(msg);
+	else 
+		Log::Error(msg);
 	
 	return 0;
 }
