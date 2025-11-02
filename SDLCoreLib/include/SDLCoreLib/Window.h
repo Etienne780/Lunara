@@ -15,9 +15,9 @@ namespace SDLCore {
 		Window(Window&&) = delete;
 		Window& operator=(Window&&) = delete;
 		
-		std::string m_name;
-		unsigned int m_width;
-		unsigned int m_height;
+		std::string m_name = "Untitled";
+		unsigned int m_width = 0;
+		unsigned int m_height = 0;
 	};
 
 }
