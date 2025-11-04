@@ -36,10 +36,6 @@ namespace SDLCore {
 		return m_height;
 	}
 
-	std::unique_ptr<Window> Window::CreateInstance(WindowID id) {
-		return std::unique_ptr<Window>(new Window(id));
-	}
-
 	std::unique_ptr<Window> Window::CreateInstance(WindowID id, const std::string& name, int width, int height) {
 		return std::unique_ptr<Window>(new Window(id, name, width, height));
 	}
@@ -90,7 +86,7 @@ namespace SDLCore {
 		SDL_WindowFlags flags = 0;
 
 		if (m_resizable) flags |= SDL_WINDOW_RESIZABLE;
-		if (m_alwaysTop) flags |= SDL_WINDOW_ALWAYS_ON_TOP;
+		if (m_alwaysOnTop) flags |= SDL_WINDOW_ALWAYS_ON_TOP;
 		if (m_borderless) flags |= SDL_WINDOW_BORDERLESS;
 
 		return flags;
@@ -132,6 +128,70 @@ namespace SDLCore {
 
 	int Window::GetVsync() const {
 		return m_vsync;
+	}
+
+	Window* Window::SetName(const std::string& name) {
+		m_name = name;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowTitle(m_sdlWindow, m_name.c_str());
+		}
+
+		return this;
+	}
+
+	Window* Window::SetWidth(int width) {
+		if (width <= 0)
+			width = 1;
+		m_width = width;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowSize(m_sdlWindow, m_width, m_height);
+		}
+
+		return this;
+	}
+
+	Window* Window::SetHeight(int height) {
+		if (height <= 0)
+			height = 1;
+		m_height = height;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowSize(m_sdlWindow, m_width, m_height);
+		}
+
+		return this;
+	}
+
+	Window* Window::SetResizable(bool value) {
+		m_resizable = value;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowResizable(m_sdlWindow, m_resizable);
+		}
+
+		return this;
+	}
+
+	Window* Window::SetAlwaysOnTop(bool value) {
+		m_alwaysOnTop = value;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowAlwaysOnTop(m_sdlWindow, m_alwaysOnTop);
+		}
+
+		return this;
+	}
+
+	Window* Window::SetBorderless(bool value) {
+		m_borderless = value;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowBordered(m_sdlWindow, m_borderless);
+		}
+
+		return this;
 	}
 
 }

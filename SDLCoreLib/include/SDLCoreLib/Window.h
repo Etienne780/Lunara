@@ -79,6 +79,13 @@ namespace SDLCore {
 		*/
 		int GetVsync() const;
 
+		Window* SetName(const std::string& name);
+		Window* SetWidth(int width);
+		Window* SetHeight(int height);
+		Window* SetResizable(bool value);
+		Window* SetAlwaysOnTop(bool value);
+		Window* SetBorderless(bool value);
+
 	private:
 		Window(WindowID id);
 		Window(WindowID id, const std::string& name, int width, int height);
@@ -87,17 +94,16 @@ namespace SDLCore {
 		Window(Window&&) = delete;
 		Window& operator=(Window&&) = delete;
 		
-		static std::unique_ptr<Window> CreateInstance(WindowID id);
 		static std::unique_ptr<Window> CreateInstance(WindowID id, const std::string& name, int width, int height);
 
 		WindowID m_id{ SDLCORE_INVALID_ID };
 		std::string m_name = "Untitled";
-		int m_width = 0;
-		int m_height = 0;
+		int m_width = 1;
+		int m_height = 1;
 
 		// ========== window ==========
 		bool m_resizable = true;
-		bool m_alwaysTop = false;
+		bool m_alwaysOnTop = false;
 		bool m_borderless = false;
 
 		// ========== renderer ==========

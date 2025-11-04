@@ -1,5 +1,6 @@
 #pragma once
 #include <SDLCoreLib/Application.h>
+#include <CoreLib/Log.h>
 
 class Lunara : public SDLCore::Application {
 public:
