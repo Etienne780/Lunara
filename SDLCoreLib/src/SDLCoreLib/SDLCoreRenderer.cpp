@@ -57,14 +57,61 @@ namespace SDLCore::Renderer {
         auto renderer = GetActiveRenderer("Clear");
         if (!renderer) 
             return;
-        SDL_RenderClear(renderer.get());
+        if (SDL_RenderClear(renderer.get()) < 0) {
+            Log::Error("SDLCore::Renderer::Clear: Failed to clear renderer: {}", SDL_GetError());
+        }
     }
 
     void Present() {
         auto renderer = GetActiveRenderer("Present");
         if (!renderer)
             return;
-        SDL_RenderPresent(renderer.get());
+        if (SDL_RenderPresent(renderer.get()) < 0) {
+            Log::Error("SDLCore::Renderer::Present: Failed to Present: {}", SDL_GetError());
+        }
+    }
+
+    void SetViewport(int x, int y, int w, int h) {
+        auto renderer = GetActiveRenderer("SetViewport");
+        if (!renderer)
+            return;
+
+        SDL_Rect viewport{ x, y, w, h };
+        if (SDL_SetRenderViewport(renderer.get(), &viewport) < 0) {
+            Log::Error("SDLCore::Renderer::SetViewport: Failed to set viewport ({}, {}, {}, {}): {}",
+                x, y, w, h, SDL_GetError());
+        }
+    }
+
+    void ResetViewport() {
+        auto renderer = GetActiveRenderer("ResetViewport");
+        if (!renderer)
+            return;
+
+        if (SDL_SetRenderViewport(renderer.get(), nullptr) < 0) {
+            Log::Error("SDLCore::Renderer::ResetViewport: Failed to reset viewport: {}", SDL_GetError());
+        }
+    }
+
+    void SetBlendMode(bool enabled) {
+        auto renderer = GetActiveRenderer("SetBlendMode");
+        if (!renderer)
+            return;
+
+        SDL_BlendMode mode = enabled ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE;
+        if (SDL_SetRenderDrawBlendMode(renderer.get(), mode) < 0) {
+            Log::Error("SDLCore::Renderer::SetBlendMode: Failed to set blend mode {}: {}",
+                enabled ? "BLEND" : "NONE", SDL_GetError());
+        }
+    }
+
+    void SetBlendMode(BlendMode mode) {
+        auto renderer = GetActiveRenderer("SetBlendMode");
+        if (!renderer)
+            return;
+        if (SDL_SetRenderDrawBlendMode(renderer.get(), static_cast<SDL_BlendMode>(mode)) < 0) {
+            Log::Error("SDLCore::Renderer::SetBlendMode: Failed to set blend mode {}: {}", static_cast<int>(mode), SDL_GetError());
+        }
     }
 
     #pragma region Color
@@ -73,7 +120,9 @@ namespace SDLCore::Renderer {
         auto renderer = GetActiveRenderer("SetColor");
         if (!renderer)
             return;
-        SDL_SetRenderDrawColor(renderer.get(), r, g, b, a);
+        if (SDL_SetRenderDrawColor(renderer.get(), r, g, b, a) < 0) {
+            Log::Error("SDLCore::Renderer::SetColor: Failed to set color ({}, {}, {}, {}): {}", r, g, b, a, SDL_GetError());
+        }
     }
 
     void SetColor(Uint8 r, Uint8 g, Uint8 b) {
@@ -117,7 +166,9 @@ namespace SDLCore::Renderer {
         if (!renderer)
             return;
         SDL_FRect rect{ x, y, w, h };
-        SDL_RenderFillRect(renderer.get(), &rect);
+        if (SDL_RenderFillRect(renderer.get(), &rect) < 0) {
+            Log::Error("SDLCore::Renderer::FillRect: Failed to fill rect ({}, {}, {}, {}): {}", x, y, w, h, SDL_GetError());
+        }
     }
 
     void FillRect(const Vector2& pos, float w, float h) {
@@ -163,7 +214,11 @@ namespace SDLCore::Renderer {
             if (rect.w <= 0 || rect.h <= 0)
                 break;
 
-            SDL_RenderRect(renderer.get(), &rect);
+            if (SDL_RenderRect(renderer.get(), &rect) < 0) {
+                Log::Error("SDLCore::Renderer::Rect: Failed to draw rect at iteration {} ({}, {}, {}, {}): {}",
+                    i, rect.x, rect.y, rect.w, rect.h, SDL_GetError());
+                break;
+            }
         }
     }
 
@@ -227,7 +282,9 @@ namespace SDLCore::Renderer {
         }
 
         int indices[6] = { 0, 1, 2, 2, 3, 0 };
-        SDL_RenderGeometry(renderer.get(), nullptr, quad, 4, indices, 6);
+        if (SDL_RenderGeometry(renderer.get(), nullptr, quad, 4, indices, 6) < 0) {
+            Log::Error("SDLCore::Renderer::Line: Failed to draw thick line ({}, {}, {}, {}): {}", x1, y1, x2, y2, SDL_GetError());
+        }
     }
 
     void Line(const Vector2& p1, float x2, float y2) {
@@ -247,6 +304,16 @@ namespace SDLCore::Renderer {
     }
 
     #pragma endregion
+
+    void Point(float x, float y) {
+        auto renderer = GetActiveRenderer("Point");
+        if (!renderer)
+            return;
+
+        if (SDL_RenderPoint(renderer.get(), x, y) < 0) {
+            Log::Error("SDLCore::Renderer::Point: Failed to draw point ({}, {}): {}", x, y, SDL_GetError());
+        }
+    }
 
     #pragma endregion
 

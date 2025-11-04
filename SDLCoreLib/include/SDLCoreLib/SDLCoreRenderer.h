@@ -6,6 +6,17 @@
 
 namespace SDLCore::Renderer {
 
+	enum BlendMode {
+		NONE				= SDL_BLENDMODE_NONE,				/**< no blending: dstRGBA = srcRGBA */
+		BLEND				= SDL_BLENDMODE_BLEND,				/**< alpha blending: dstRGB = (srcRGB * srcA) + (dstRGB * (1-srcA)), dstA = srcA + (dstA * (1-srcA)) */
+		BLEND_PREMULTIPLIED = SDL_BLENDMODE_BLEND_PREMULTIPLIED,/**< pre-multiplied alpha blending: dstRGBA = srcRGBA + (dstRGBA * (1-srcA)) */
+		ADD					= SDL_BLENDMODE_ADD,				/**< additive blending: dstRGB = (srcRGB * srcA) + dstRGB, dstA = dstA */
+		ADD_PREMULTIPLIED	= SDL_BLENDMODE_ADD_PREMULTIPLIED,	/**< pre-multiplied additive blending: dstRGB = srcRGB + dstRGB, dstA = dstA */
+		MOD					= SDL_BLENDMODE_MOD,				/**< color modulate: dstRGB = srcRGB * dstRGB, dstA = dstA */
+		MUL					= SDL_BLENDMODE_MUL,				/**< color multiply: dstRGB = (srcRGB * dstRGB) + (dstRGB * (1-srcA)), dstA = dstA */
+		INVALID				= SDL_BLENDMODE_INVALID
+	};
+
 	/**
 	* @brief Returns the currently active SDL renderer.
 	* @return Pointer to the currently active SDL_Renderer, or nullptr if none is set.
@@ -31,6 +42,32 @@ namespace SDLCore::Renderer {
 	* @brief Presents the current rendering buffer to the screen.
 	*/
 	void Present();
+
+	/**
+	* @brief Sets the current viewport (rendering region of the window).
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	* @param w Width in pixels.
+	* @param h Height in pixels.
+	*/
+	void SetViewport(int x, int y, int w, int h);
+
+	/**
+	* @brief Resets the viewport to cover the entire window.
+	*/
+	void ResetViewport();
+
+	/**
+	* @brief Enables or disables blending mode.
+	* @param enabled True = blending enabled, false = disabled.
+	*/
+	void SetBlendMode(bool enabled);
+
+	/**
+	* @brief Sets the blending mode explicitly.
+	* @param mode One of BlendMode values.
+	*/
+	void SetBlendMode(BlendMode mode);
 
 	#pragma region Color
 
@@ -212,6 +249,13 @@ namespace SDLCore::Renderer {
 	void Line(const Vector4& poins);
 
 	#pragma endregion
+
+	/**
+	* @brief Draws a point on the screen.
+	* @param x X coordinate in pixels.
+	* @param y Y coordinate in pixels.
+	*/
+	void Point(float x, float y);
 
 	#pragma endregion
 }
