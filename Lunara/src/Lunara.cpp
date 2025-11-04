@@ -5,11 +5,11 @@ Lunara::Lunara()
 	: Application("Lunara", SDLCore::Version(1, 0)) {
 }
 
-SDLCore::Window* winLunara = nullptr;
-SDLCore::Window* winZwei = nullptr;
+SDLCore::WindowID winLunara;
+SDLCore::WindowID winZwei;
 void Lunara::OnStart() {
-	winLunara = CreateWindow("Lunara", 200, 200);
-	winZwei = CreateWindow("zwei", 200, 200);
+	winLunara = CreateWindow("Lunara", 200, 200)->GetID();
+	winZwei = CreateWindow("zwei", 200, 200)->GetID();
 }
 
 void Lunara::OnUpdate() {
@@ -21,13 +21,19 @@ void Lunara::OnUpdate() {
 		RE::SetWindowRenderer(winLunara);
 		RE::SetColor(255, 0, 0);
 		RE::Clear();
-		// idk
+
+		RE::SetColor(0, 255, 0);
+		RE::FillRect(100, 100, 50, 50);
+
 		RE::Present();
 
 		RE::SetWindowRenderer(winZwei);
 		RE::SetColor(0, 0, 255);
 		RE::Clear();
-		// idk
+
+		RE::SetColor(0, 255, 0);
+		RE::FillRect(100, 100, 50, 50);
+
 		RE::Present();
 	}
 }

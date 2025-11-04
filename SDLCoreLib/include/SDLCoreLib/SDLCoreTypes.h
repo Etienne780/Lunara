@@ -8,7 +8,7 @@ namespace SDLCore {
 
 	template<typename Tag>
 	struct SDLCoreID {
-		unsigned int value = 0;
+		unsigned int value = SDLCORE_INVALID_ID;
 
 		constexpr SDLCoreID() = default;
 		explicit constexpr SDLCoreID(unsigned int v) : value(v) {}

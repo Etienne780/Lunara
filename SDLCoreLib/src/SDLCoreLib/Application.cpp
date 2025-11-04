@@ -21,7 +21,7 @@ namespace SDLCore {
 
     Application* Application::GetInstance() {
 #ifndef NDEBUG
-        if (m_application) {
+        if (!m_application) {
             Log::Error("SDLCore::Application::GetInstance: called without an exesting instance!");
         }
 #endif
@@ -56,6 +56,7 @@ namespace SDLCore {
         }
         OnQuit();
 
+        Renderer::SetWindowRenderer(nullptr);
         m_windows.clear();
         SDL_Quit();
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
 #include <CoreLib/Math/Vector4.h>
 #include "Window.h"
@@ -17,17 +18,21 @@ namespace SDLCore::Renderer {
 	*
 	* Retrieves the window from the Application instance by ID and sets its renderer
 	* as the current global renderer context.
-	* Logs an error if the window or its renderer is invalid.
+	* Logs an error if the renderer is invalid.
 	*/
 	void SetWindowRenderer(WindowID winID);
 
 	/**
-	* @brief Sets the SDL renderer of the specified window as the current renderer.
-	* @param win Pointer to the target window object.
-	*
-	* If the window or its renderer is invalid, an error message is logged.
+	* @brief Clears the current rendering target using the active draw color.
 	*/
-	void SetWindowRenderer(Window* win);
+	void Clear();
+
+	/**
+	* @brief Presents the current rendering buffer to the screen.
+	*/
+	void Present();
+
+	#pragma region Color
 
 	/**
 	* @brief Sets the current drawing color using RGBA values.
@@ -49,6 +54,20 @@ namespace SDLCore::Renderer {
 	void SetColor(Uint8 r, Uint8 g, Uint8 b);
 
 	/**
+	* @brief Sets the current drawing color using a Brightness value.
+	*
+	* @param brightness in the range 0–255.
+	* @param alpha components in the range 0–255.
+	*/
+	void SetColor(Uint8 brightness, Uint8 alpha);
+
+	/**
+	* @brief Sets the current drawing color using a Brightness value.
+	* @param brightness in the range 0–255.
+	*/
+	void SetColor(Uint8 brightness);
+
+	/**
 	* @brief Sets the current drawing color using RGBA values.
 	* @param rgba Color components in the range 0–255.
 	*/
@@ -60,13 +79,45 @@ namespace SDLCore::Renderer {
 	*/
 	void SetColor(const Vector3& rgb);
 
-	/**
-	* @brief Clears the current rendering target using the active draw color.
-	*/
-	void Clear();
+	#pragma endregion
+
+	#pragma region Primitives
+
+	#pragma region Rectangle
 
 	/**
-	* @brief Presents the current rendering buffer to the screen.
+	* @brief Draws a filled rectangle.
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	* @param w Rectangle width in pixels.
+	* @param h Rectangle height in pixels.
 	*/
-	void Present();
+	void FillRect(int x, int y, int w, int h);
+
+	/**
+	* @brief Draws a filled rectangle.
+	* @param pos x,y position in pixels.
+	* @param w Rectangle width in pixels.
+	* @param h Rectangle height in pixels.
+	*/
+	void FillRect(const Vector2& pos, int w, int h);
+
+	/**
+	* @brief Draws a filled rectangle.
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	* @param size Rectangle Size in pixels.
+	*/
+	void FillRect(int x, int y, const Vector2& size);
+
+	/**
+	* @brief Draws a filled rectangle.
+	* @param pos x,y position in pixels.
+	* @param size Rectangle Size in pixels.
+	*/
+	void FillRect(const Vector2& pos, const Vector2& size);
+
+	#pragma endregion
+
+	#pragma endregion
 }

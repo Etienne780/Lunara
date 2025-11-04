@@ -12,9 +12,11 @@ namespace SDLCore {
 	}
 
 	Window::~Window() {
-		// not necessary
+		SDL_DestroyRenderer(m_sdlRenderer.get());
+		SDL_DestroyWindow(m_sdlWindow.get());
+
 		m_sdlRenderer.reset();
-		m_sdlWindow.reset();  
+		m_sdlWindow.reset();
 	}
 
 	WindowID Window::GetID() const {
@@ -52,16 +54,17 @@ namespace SDLCore {
 			return;
 		}
 
-		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window* ptr) {
-			SDL_DestroyWindow(ptr);
-		});
-
+		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window*) {});
 		SetWindowProperties();
 	}
 
 	void Window::DestroyWindow() {
-		m_sdlWindow.reset();
 		DestroyRenderer();
+
+		if (m_sdlWindow) {
+			SDL_DestroyWindow(m_sdlWindow.get());
+			m_sdlWindow.reset();
+		}
 	}
 
 	void Window::CreateRenderer() {
@@ -71,16 +74,17 @@ namespace SDLCore {
 			return;
 		}
 
-		m_sdlRenderer = std::shared_ptr<SDL_Renderer>(rawRenderer, [](SDL_Renderer* ptr) {
-			SDL_DestroyRenderer(ptr);
-		});
-
+		m_sdlRenderer = std::shared_ptr<SDL_Renderer>(rawRenderer, [](SDL_Renderer*) {});
 		SetVsync(m_vsync);
 	}
 
 	void Window::DestroyRenderer() {
-		m_sdlRenderer.reset();
+		if (m_sdlRenderer) {
+			SDL_DestroyRenderer(m_sdlRenderer.get());
+			m_sdlRenderer.reset();
+		}
 	}
+
 
 	bool Window::HasWindow() const {
 		return m_sdlWindow != nullptr;
@@ -90,11 +94,17 @@ namespace SDLCore {
 		return m_sdlRenderer != nullptr;
 	}
 
-	std::weak_ptr<SDL_Window> Window::GetSDLWindow() {
+	std::shared_ptr<SDL_Window> Window::GetSDLWindow() {
+		if (!m_sdlWindow) {
+			return nullptr;
+		}
 		return m_sdlWindow;
 	}
 
-	std::weak_ptr<SDL_Renderer> Window::GetSDLRenderer() {
+	std::shared_ptr<SDL_Renderer> Window::GetSDLRenderer() {
+		if (!m_sdlRenderer) {
+			return nullptr;
+		}
 		return m_sdlRenderer;
 	}
 

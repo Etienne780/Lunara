@@ -68,15 +68,15 @@ namespace SDLCore {
 
 		/**
 		* @brief Gets the SDL window
-		* @return SDL_Window weak pointer
+		* @return SDL_Window shared pointer
 		*/
-		std::weak_ptr<SDL_Window> GetSDLWindow();
+		std::shared_ptr<SDL_Window> GetSDLWindow();
 
 		/**
 		* @brief Gets the SDL Renderer of this window
-		* @return SDL_Renderer weak pointer
+		* @return SDL_Renderer shared pointer
 		*/
-		std::weak_ptr<SDL_Renderer> GetSDLRenderer();
+		std::shared_ptr<SDL_Renderer> GetSDLRenderer();
 
 		/**
 		* @brief Gets the name/title of this window
