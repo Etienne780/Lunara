@@ -44,6 +44,7 @@ namespace SDLCore {
 		if (m_width < 0) m_width = 0;
 		if (m_height < 0) m_height = 0;
 		m_sdlWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
+		SetWindowProperties();
 
 		if (!m_sdlWindow) {
 			Log::Error("Failed to create window '{}': {}", m_name, SDL_GetError());
@@ -90,6 +91,10 @@ namespace SDLCore {
 		if (m_borderless) flags |= SDL_WINDOW_BORDERLESS;
 
 		return flags;
+	}
+
+	void Window::SetWindowProperties() {
+		SDL_SetWindowOpacity(m_sdlWindow, m_opacity);
 	}
 
 	bool Window::SetVsync(int value) {
@@ -189,6 +194,21 @@ namespace SDLCore {
 
 		if (m_sdlWindow) {
 			SDL_SetWindowBordered(m_sdlWindow, m_borderless);
+		}
+
+		return this;
+	}
+
+	Window* Window::SetOpacity(float opacity) {
+		if (opacity < 0)
+			opacity = 0;
+		if (opacity > 1)
+			opacity = 1;
+
+		m_opacity = opacity;
+
+		if (m_sdlWindow) {
+			SDL_SetWindowOpacity(m_sdlWindow, m_opacity);
 		}
 
 		return this;
