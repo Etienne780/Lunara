@@ -109,11 +109,11 @@ namespace SDLCore {
         if (m_fpsCap <= 0 || m_vsync != 0)
             return;
 
-        Uint32 targetFrameTime = 1000 / m_fpsCap;
-        Uint32 frameTime = SDL_GetTicks() - frameStartTime;
+        uint64_t targetFrameTime = 1000 / m_fpsCap;
+        uint64_t frameTime = SDL_GetTicks() - frameStartTime;
 
         if (frameTime < targetFrameTime) {
-            SDL_Delay(targetFrameTime - frameTime);
+            SDL_Delay(static_cast<Uint32>(targetFrameTime - frameTime));
         }
     }
 
