@@ -9,6 +9,9 @@ namespace SDLCore::Renderer {
 
 	static std::shared_ptr<SDL_Renderer> m_renderer;
 
+    static int m_strokeWidth = 1;
+    static bool m_innerStroke = true;
+
     SDL_Renderer* GetActiveRenderer() {
         return m_renderer.get();
     }
@@ -95,28 +98,152 @@ namespace SDLCore::Renderer {
 
     #pragma endregion
 
+    void SetStrokeWidth(int width) {
+        if (width <= 0) 
+            width = 1;
+        m_strokeWidth = width;
+    }
+
+    void SetInnerStroke(bool value) {
+        m_innerStroke = value;
+    }
+
     #pragma region Primitives
 
     #pragma region Rectangle
 
-    void FillRect(int x, int y, int w, int h) {
+    void FillRect(float x, float y, float w, float h) {
         auto renderer = GetActiveRenderer("FillRect");
         if (!renderer)
             return;
-        SDL_FRect rect{ static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h) };
+        SDL_FRect rect{ x, y, w, h };
         SDL_RenderFillRect(renderer.get(), &rect);
     }
 
-    void FillRect(const Vector2& pos, int w, int h) {
-        FillRect(static_cast<int>(pos.x), static_cast<int>(pos.y), w, h);
+    void FillRect(const Vector2& pos, float w, float h) {
+        FillRect(pos.x, pos.y, w, h);
     }
 
-    void FillRect(int x, int y, const Vector2& size) {
-        FillRect(x, y, static_cast<int>(size.x), static_cast<int>(size.y));
+    void FillRect(float x, float y, const Vector2& size) {
+        FillRect(x, y, size.x, size.y);
     }
 
     void FillRect(const Vector2& pos, const Vector2& size) {
-        FillRect(static_cast<int>(pos.x), static_cast<int>(pos.y), static_cast<int>(size.x), static_cast<int>(size.y));
+        FillRect(pos.x, pos.y, size.x, size.y);
+    }
+
+    void FillRect(const Vector4& trans) {
+        FillRect(trans.x, trans.y, trans.x, trans.y);
+    }
+
+    void Rect(float x, float y, float w, float h) {
+        auto renderer = GetActiveRenderer("Rect");
+        if (!renderer) 
+            return;
+
+        for (int i = 0; i < m_strokeWidth; i++) {
+            SDL_FRect rect;
+            if (m_innerStroke) {
+                rect = SDL_FRect{
+                    x + i,
+                    y + i,
+                    w - 2 * i,
+                    h - 2 * i
+                };
+            }
+            else {
+                rect = SDL_FRect{
+                    x - i,
+                    y - i,
+                    w + 2 * i,
+                    h + 2 * i
+                };
+            }
+
+            if (rect.w <= 0 || rect.h <= 0)
+                break;
+
+            SDL_RenderRect(renderer.get(), &rect);
+        }
+    }
+
+    void Rect(const Vector2& pos, float w, float h) {
+        Rect(pos.x, pos.y, w, h);
+    }
+
+    void Rect(float x, float y, const Vector2& size) {
+        Rect(x, y, size.x, size.y);
+    }
+
+    void Rect(const Vector2& pos, const Vector2& size) {
+        Rect(pos.x, pos.y, size.x, size.y);
+    }
+
+    void Rect(const Vector4& trans) {
+        Rect(trans.x, trans.y, trans.x, trans.y);
+    }
+
+    #pragma endregion
+
+    #pragma region Line
+
+    void Line(float x1, float y1, float x2, float y2) {
+        auto renderer = GetActiveRenderer("Line");
+        if (!renderer)
+            return;
+
+        if (m_strokeWidth <= 1) {
+            SDL_RenderLine(renderer.get(), x1, y1, x2, y2);
+            return;
+        }
+
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float length = std::sqrt(dx * dx + dy * dy);
+        if (length == 0.0f)
+            return;
+
+        dx /= length;
+        dy /= length;
+
+        float nx = -dy;
+        float ny = dx;
+
+        float halfStroke = m_strokeWidth / 2.0f;
+
+        SDL_FPoint verts[4] = {
+            { x1 + nx * halfStroke, y1 + ny * halfStroke },
+            { x2 + nx * halfStroke, y2 + ny * halfStroke },
+            { x2 - nx * halfStroke, y2 - ny * halfStroke },
+            { x1 - nx * halfStroke, y1 - ny * halfStroke }
+        };
+        Uint8 r, g, b, a;
+        SDL_GetRenderDrawColor(renderer.get(), &r, &g, &b, &a);
+        SDL_Vertex quad[4];
+        for (int i = 0; i < 4; ++i) {
+            quad[i].position.x = verts[i].x;
+            quad[i].position.y = verts[i].y;
+            quad[i].color = SDL_FColor{ static_cast<float>(r), static_cast<float>(g), static_cast<float>(b), static_cast<float>(a) };
+        }
+
+        int indices[6] = { 0, 1, 2, 2, 3, 0 };
+        SDL_RenderGeometry(renderer.get(), nullptr, quad, 4, indices, 6);
+    }
+
+    void Line(const Vector2& p1, float x2, float y2) {
+        Line(p1.x, p1.y, x2, y2);
+    }
+
+    void Line(float x1, float y1, const Vector2& p2) {
+        Line(x1, y1, p2.x, p2.y);
+    }
+
+    void Line(const Vector2& p1, const Vector2& p2) {
+        Line(p1.x, p1.y, p2.x, p2.y);
+    }
+
+    void Line(const Vector4& poins) {
+        Line(poins.x, poins.y, poins.z, poins.w);
     }
 
     #pragma endregion

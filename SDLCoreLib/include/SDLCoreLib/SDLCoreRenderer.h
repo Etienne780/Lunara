@@ -81,6 +81,10 @@ namespace SDLCore::Renderer {
 
 	#pragma endregion
 
+	void SetStrokeWidth(int width);
+
+	void SetInnerStroke(bool value);
+
 	#pragma region Primitives
 
 	#pragma region Rectangle
@@ -92,7 +96,7 @@ namespace SDLCore::Renderer {
 	* @param w Rectangle width in pixels.
 	* @param h Rectangle height in pixels.
 	*/
-	void FillRect(int x, int y, int w, int h);
+	void FillRect(float x, float y, float w, float h);
 
 	/**
 	* @brief Draws a filled rectangle.
@@ -100,7 +104,7 @@ namespace SDLCore::Renderer {
 	* @param w Rectangle width in pixels.
 	* @param h Rectangle height in pixels.
 	*/
-	void FillRect(const Vector2& pos, int w, int h);
+	void FillRect(const Vector2& pos, float w, float h);
 
 	/**
 	* @brief Draws a filled rectangle.
@@ -108,7 +112,7 @@ namespace SDLCore::Renderer {
 	* @param y Y position in pixels.
 	* @param size Rectangle Size in pixels.
 	*/
-	void FillRect(int x, int y, const Vector2& size);
+	void FillRect(float x, float y, const Vector2& size);
 
 	/**
 	* @brief Draws a filled rectangle.
@@ -116,6 +120,96 @@ namespace SDLCore::Renderer {
 	* @param size Rectangle Size in pixels.
 	*/
 	void FillRect(const Vector2& pos, const Vector2& size);
+
+	/**
+	* @brief Draws a filled rectangle.
+	* @param transform x, y, w, h in pixels.
+	*/
+	void FillRect(const Vector4& transform);
+
+	/**
+	* @brief Draws an outlined rectangle.
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	* @param w Rectangle width in pixels.
+	* @param h Rectangle height in pixels.
+	*/
+	void Rect(float x, float y, float w, float h);
+
+	/**
+	* @brief Draws an outlined rectangle.
+	* @param pos x,y position in pixels.
+	* @param w Rectangle width in pixels.
+	* @param h Rectangle height in pixels.
+	*/
+	void Rect(const Vector2& pos, float w, float h);
+
+	/**
+	* @brief Draws an outlined rectangle.
+	* @param x X position in pixels.
+	* @param y Y position in pixels.
+	* @param size Rectangle Size in pixels.
+	*/
+	void Rect(float x, float y, const Vector2& size);
+
+	/**
+	* @brief Draws an outlined rectangle.
+	* @param pos x,y position in pixels.
+	* @param size Rectangle Size in pixels.
+	*/
+	void Rect(const Vector2& pos, const Vector2& size);
+
+	/**
+	* @brief Draws an outlined rectangle.
+	* @param transform x, y, w, h in pixels.
+	*/
+	void Rect(const Vector4& transform);
+
+	#pragma endregion
+
+	#pragma region Line
+
+	/**
+	* @brief Draws a line between two points in 2D space.
+	* @param x1 Starting point X coordinate in pixels.
+	* @param y1 Starting point Y coordinate in pixels.
+	* @param x2 Ending point X coordinate in pixels.
+	* @param y2 Ending point Y coordinate in pixels.
+	*/
+	void Line(float x1, float y1, float x2, float y2);
+
+	/**
+	* @brief Draws a line using a starting point vector and scalar end coordinates.
+	* @param p1 Starting point as a Vector2.
+	* @param x2 Ending point X coordinate in pixels.
+	* @param y2 Ending point Y coordinate in pixels.
+	*/
+	void Line(const Vector2& p1, float x2, float y2);
+
+	/**
+	* @brief Draws a line using scalar start coordinates and a vector end point.
+	* @param x1 Starting point X coordinate in pixels.
+	* @param y1 Starting point Y coordinate in pixels.
+	* @param p2 Ending point as a Vector2.
+	*/
+	void Line(float x1, float y1, const Vector2& p2);
+
+	/**
+	* @brief Draws a line between two 2D vectors.
+	* @param p1 Starting point as a Vector2.
+	* @param p2 Ending point as a Vector2.
+	*/
+	void Line(const Vector2& p1, const Vector2& p2);
+
+	/**
+	* @brief Draws a line using a Vector4 containing (x1, y1, x2, y2).
+	* @param points Vector4 containing start and end coordinates.
+	*               - x = start X
+	*               - y = start Y
+	*               - z = end X
+	*               - w = end Y
+	*/
+	void Line(const Vector4& poins);
 
 	#pragma endregion
 
