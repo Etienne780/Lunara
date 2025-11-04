@@ -37,9 +37,6 @@ namespace SDLCore {
         s_currentTimeNS = GetTimeNS();
         s_deltaTimeSec = static_cast<double>(s_currentTimeNS - s_lastTimeNS) / 1e9; // ns -> s
         s_frameRate = (s_deltaTimeSec > 0.0) ? 1.0 / s_deltaTimeSec : 0.0;
-
-        Log::Info("Time: {}ns | Last-Time: {}ns | Delta: {}s | FPS: {}",
-            s_lastTimeNS, s_lastTimeNS, s_deltaTimeSec, s_frameRate);
         s_lastTimeNS = s_currentTimeNS;
     }
 
