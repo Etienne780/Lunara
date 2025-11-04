@@ -67,6 +67,18 @@ namespace SDLCore {
 		SDL_WindowID GetSDLID() const;
 
 		/**
+		* @brief Gets the SDL window
+		* @return SDL_Window weak pointer
+		*/
+		std::weak_ptr<SDL_Window> GetSDLWindow();
+
+		/**
+		* @brief Gets the SDL Renderer of this window
+		* @return SDL_Renderer weak pointer
+		*/
+		std::weak_ptr<SDL_Renderer> GetSDLRenderer();
+
+		/**
 		* @brief Gets the name/title of this window
 		* @return Window name as std::string
 		*/
@@ -175,8 +187,8 @@ namespace SDLCore {
 		// ======= Renderer properties =======
 		int m_vsync = true;
 
-		SDL_Window* m_sdlWindow = nullptr;
-		SDL_Renderer* m_sdlRenderer = nullptr;
+		std::shared_ptr<SDL_Window> m_sdlWindow = nullptr;
+		std::shared_ptr<SDL_Renderer> m_sdlRenderer = nullptr;
 
 		/**
 		* @brief Gets SDL window flags based on current settings

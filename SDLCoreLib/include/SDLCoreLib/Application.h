@@ -4,6 +4,7 @@
 
 #include "SDLCoreTypes.h"
 #include "SDLCoreError.h"
+#include "SDLCoreRenderer.h"
 #include "CoreTime.h"
 #include "IDManager.h"
 #include "Version.h"

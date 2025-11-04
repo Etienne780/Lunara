@@ -12,8 +12,9 @@ namespace SDLCore {
 	}
 
 	Window::~Window() {
-		SDL_DestroyRenderer(m_sdlRenderer);
-		SDL_DestroyWindow(m_sdlWindow);
+		// not necessary
+		m_sdlRenderer.reset();
+		m_sdlWindow.reset();  
 	}
 
 	WindowID Window::GetID() const {
@@ -21,7 +22,7 @@ namespace SDLCore {
 	}
 
 	SDL_WindowID Window::GetSDLID() const {
-		return m_sdlWindow ? SDL_GetWindowID(m_sdlWindow) : SDLCORE_INVALID_ID;
+		return m_sdlWindow ? SDL_GetWindowID(m_sdlWindow.get()) : SDLCORE_INVALID_ID;
 	}
 
 	std::string Window::GetName() const {
@@ -43,43 +44,57 @@ namespace SDLCore {
 	void Window::CreateWindow() {
 		if (m_width < 0) m_width = 0;
 		if (m_height < 0) m_height = 0;
-		m_sdlWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
-		SetWindowProperties();
 
-		if (!m_sdlWindow) {
-			Log::Error("Failed to create window '{}': {}", m_name, SDL_GetError());
+		SDL_Window* rawWindow = SDL_CreateWindow(m_name.c_str(), m_width, m_height, GetWindowFlags());
+
+		if (!rawWindow) {
+			Log::Error("SDLCore::Window::CreateWindow: Failed to create window '{}': {}", m_name, SDL_GetError());
 			return;
 		}
+
+		m_sdlWindow = std::shared_ptr<SDL_Window>(rawWindow, [](SDL_Window* ptr) {
+			SDL_DestroyWindow(ptr);
+		});
+
+		SetWindowProperties();
 	}
 
 	void Window::DestroyWindow() {
+		m_sdlWindow.reset();
 		DestroyRenderer();
-		if (m_sdlWindow)
-			SDL_DestroyWindow(m_sdlWindow);
-		m_sdlWindow = nullptr;
 	}
 
 	void Window::CreateRenderer() {
-		m_sdlRenderer = SDL_CreateRenderer(m_sdlWindow, nullptr);
-		if (!m_sdlRenderer) {
-			Log::Error("Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
+		SDL_Renderer* rawRenderer = SDL_CreateRenderer(m_sdlWindow.get(), nullptr);
+		if (!rawRenderer) {
+			Log::Error("SDLCore::Window::CreateRenderer: Renderer creation failed on window '{}': {}", m_name, SDL_GetError());
 			return;
 		}
+
+		m_sdlRenderer = std::shared_ptr<SDL_Renderer>(rawRenderer, [](SDL_Renderer* ptr) {
+			SDL_DestroyRenderer(ptr);
+		});
 
 		SetVsync(m_vsync);
 	}
 
 	void Window::DestroyRenderer() {
-		if (m_sdlRenderer)
-			SDL_DestroyRenderer(m_sdlRenderer);
-		m_sdlRenderer = nullptr;
+		m_sdlRenderer.reset();
 	}
 
 	bool Window::HasWindow() const {
-		return m_sdlWindow;
+		return m_sdlWindow != nullptr;
 	}
 
 	bool Window::HasRenderer() const {
+		return m_sdlRenderer != nullptr;
+	}
+
+	std::weak_ptr<SDL_Window> Window::GetSDLWindow() {
+		return m_sdlWindow;
+	}
+
+	std::weak_ptr<SDL_Renderer> Window::GetSDLRenderer() {
 		return m_sdlRenderer;
 	}
 
@@ -94,7 +109,7 @@ namespace SDLCore {
 	}
 
 	void Window::SetWindowProperties() {
-		SDL_SetWindowOpacity(m_sdlWindow, m_opacity);
+		SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 	}
 
 	bool Window::SetVsync(int value) {
@@ -111,12 +126,12 @@ namespace SDLCore {
 		if (!m_sdlRenderer)
 			return false;
 
-		if (SDL_SetRenderVSync(m_sdlRenderer, value) < 0) {
+		if (SDL_SetRenderVSync(m_sdlRenderer.get(), value) < 0) {
 		
 			if (value == -1) {
-				Log::Warn("Adaptive VSync not supported, falling back to normal VSync.");
-				if (SDL_SetRenderVSync(m_sdlRenderer, 1) < 0) {
-					Log::Error("Failed to set normal VSync for window '{}': {}", m_name, SDL_GetError());
+				Log::Warn("SDLCore::Window::SetVsync: Adaptive VSync not supported, falling back to normal VSync.");
+				if (SDL_SetRenderVSync(m_sdlRenderer.get(), 1) < 0) {
+					Log::Error("SDLCore::Window::SetVsync: Failed to set normal VSync for window '{}': {}", m_name, SDL_GetError());
 					m_vsync = 0;
 					return false;
 				}
@@ -124,7 +139,7 @@ namespace SDLCore {
 				return true;
 			}
 
-			Log::Error("Failed to set VSync mode {} for window '{}': {}", value, m_name, SDL_GetError());
+			Log::Error("SDLCore::Window::SetVsync: Failed to set VSync mode {} for window '{}': {}", value, m_name, SDL_GetError());
 			return false;
 		}
 
@@ -139,7 +154,7 @@ namespace SDLCore {
 		m_name = name;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowTitle(m_sdlWindow, m_name.c_str());
+			SDL_SetWindowTitle(m_sdlWindow.get(), m_name.c_str());
 		}
 
 		return this;
@@ -151,7 +166,7 @@ namespace SDLCore {
 		m_width = width;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowSize(m_sdlWindow, m_width, m_height);
+			SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height);
 		}
 
 		return this;
@@ -163,7 +178,7 @@ namespace SDLCore {
 		m_height = height;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowSize(m_sdlWindow, m_width, m_height);
+			SDL_SetWindowSize(m_sdlWindow.get(), m_width, m_height);
 		}
 
 		return this;
@@ -173,7 +188,7 @@ namespace SDLCore {
 		m_resizable = value;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowResizable(m_sdlWindow, m_resizable);
+			SDL_SetWindowResizable(m_sdlWindow.get(), m_resizable);
 		}
 
 		return this;
@@ -183,7 +198,7 @@ namespace SDLCore {
 		m_alwaysOnTop = value;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowAlwaysOnTop(m_sdlWindow, m_alwaysOnTop);
+			SDL_SetWindowAlwaysOnTop(m_sdlWindow.get(), m_alwaysOnTop);
 		}
 
 		return this;
@@ -193,7 +208,7 @@ namespace SDLCore {
 		m_borderless = value;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowBordered(m_sdlWindow, m_borderless);
+			SDL_SetWindowBordered(m_sdlWindow.get(), m_borderless);
 		}
 
 		return this;
@@ -208,7 +223,7 @@ namespace SDLCore {
 		m_opacity = opacity;
 
 		if (m_sdlWindow) {
-			SDL_SetWindowOpacity(m_sdlWindow, m_opacity);
+			SDL_SetWindowOpacity(m_sdlWindow.get(), m_opacity);
 		}
 
 		return this;

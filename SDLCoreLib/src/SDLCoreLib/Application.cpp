@@ -22,7 +22,7 @@ namespace SDLCore {
     Application* Application::GetInstance() {
 #ifndef NDEBUG
         if (m_application) {
-            Log::Error("Application::GetInstance: called without an exesting instance!");
+            Log::Error("SDLCore::Application::GetInstance: called without an exesting instance!");
         }
 #endif
         return m_application;
@@ -37,7 +37,7 @@ namespace SDLCore {
 
     int Application::Start() {
         if (cancelStart != 0) {
-            Log::Error("Application {} Could not start SDL error = {}", m_name, m_sdlErrorMsg);
+            Log::Error("SDLCore::Application::Start: {} Could not start SDL error = {}", m_name, m_sdlErrorMsg);
             return cancelStart;
         }
 
@@ -120,7 +120,7 @@ namespace SDLCore {
     Window* Application::AddWindow(std::string name, int width, int height) {
         WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
         if (newID.value == SDLCORE_INVALID_ID) {
-            Log::Error("Application::AddWindow: Cant add window, id is invalid");
+            Log::Error("SDLCore::Application::AddWindow: Cant add window, id is invalid");
             return nullptr;
         }
 
@@ -132,7 +132,7 @@ namespace SDLCore {
     Window* Application::CreateWindow(std::string name, int width, int height) {
         WindowID newID = WindowID(m_windowIDManager.GetNewUniqueIdentifier());
         if (newID.value == SDLCORE_INVALID_ID) {
-            Log::Error("Application::CreateWindow: Cant add window, id is invalid");
+            Log::Error("SDLCore::Application::CreateWindow: Cant add window, id is invalid");
             return nullptr;
         }
 
