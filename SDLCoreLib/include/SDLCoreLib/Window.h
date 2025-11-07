@@ -32,7 +32,10 @@ namespace SDLCore {
 		void CreateWindow();
 
 		/**
-		* @brief Destroys the SDL window and releases its resources
+		* @brief Destroys the associated SDL window and its renderer, releasing all related SDL resources.
+		*
+		* Note: This function does not delete or invalidate the Window object itself; it only destroys
+		* the underlying SDL structures (SDL_Window and SDL_Renderer) managed by this object.
 		*/
 		void DestroyWindow();
 
