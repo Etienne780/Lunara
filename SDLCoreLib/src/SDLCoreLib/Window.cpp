@@ -13,11 +13,7 @@ namespace SDLCore {
 	}
 
 	Window::~Window() {
-		SDL_DestroyRenderer(m_sdlRenderer.get());
-		SDL_DestroyWindow(m_sdlWindow.get());
-
-		m_sdlRenderer.reset();
-		m_sdlWindow.reset();
+		DestroyWindow();
 	}
 
 	WindowID Window::GetID() const {
