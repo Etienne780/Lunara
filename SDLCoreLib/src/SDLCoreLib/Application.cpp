@@ -5,6 +5,7 @@
 #include "Application.h"
 
 namespace SDLCore {
+
     static Application* m_application = nullptr;
 
     Application::Application(std::string& name, const Version& version)
@@ -52,6 +53,7 @@ namespace SDLCore {
                 break;
 
             OnUpdate();
+            Input::LateUpdate();
             FPSCapDelay(frameStart);
         }
         OnQuit();
@@ -97,13 +99,12 @@ namespace SDLCore {
             m_windowsToClose.push_back(window->GetID());
             break;
 
-        case SDL_EVENT_KEY_DOWN:
-            Log::Print("Key pressed in window '{}'", window->GetName());
-            break;
-
         default:
             break;
         }
+
+        // update input
+        Input::ProcessEvent(m_sdlEvent);
     }
 
     void Application::FPSCapDelay(uint64_t frameStartTime) {
