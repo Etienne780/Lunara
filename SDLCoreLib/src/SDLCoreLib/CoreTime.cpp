@@ -26,7 +26,7 @@ namespace SDLCore {
     }
 
     double Time::GetDeltaTimeSec() {
-        return s_deltaTimeSec / 1000;
+        return s_deltaTimeSec;
     }
 
     double Time::GetFrameRate() {
