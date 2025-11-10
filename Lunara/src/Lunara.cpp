@@ -18,6 +18,7 @@ struct MovingRect {
 
 static SDLCore::WindowID winFillID;
 static SDLCore::WindowID winStrokeID;
+static SDLCore::WindowID winPolygonID;
 std::vector<MovingRect> movingRects;
 
 SDLCore::InputAction testAction;
@@ -120,11 +121,10 @@ void Lunara::OnStart() {
 
     auto* winFill = CreateWindow("FillRects", 800, 800);
     winFillID = winFill->GetID();
-    winFill->SetOnClose([]() { winFillID.value = SDLCORE_INVALID_ID; });
+    winFill->AddOnClose([]() { winFillID.value = SDLCORE_INVALID_ID; });
 
-    auto* winStroke = CreateWindow("StrokeRects", 800, 800);
-    winStrokeID = winStroke->GetID();
-    winStroke->SetOnClose([]() { winStrokeID.value = SDLCORE_INVALID_ID; });
+    auto* winStroke = CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
+    auto* winPolygon = CreateWindow(&winPolygonID, "Polygon", 800, 800);
 
     int count = 50;
     for (int i = 0; i < count; ++i) {

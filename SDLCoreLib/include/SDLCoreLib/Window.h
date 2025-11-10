@@ -245,7 +245,7 @@ namespace SDLCore {
 		/**
 		* @brief Subcribes to the close event of this window
 		*/
-		Window* SetOnClose(Callback cb);
+		Window* AddOnClose(const Callback& cb);
 
 		// ======= Properties that require window recreation =======
 
@@ -282,7 +282,7 @@ namespace SDLCore {
 		bool m_borderless = false;
 		float m_opacity = 1;
 
-		Callback m_onClose = nullptr;
+		std::vector<Callback> m_onCloseCallbacks;
 
 		// ======= Renderer properties =======
 		int m_vsync = true;

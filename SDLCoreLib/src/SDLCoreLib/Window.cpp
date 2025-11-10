@@ -122,8 +122,10 @@ namespace SDLCore {
 	}
 
 	void Window::CallOnClose() {
-		if (m_onClose)
-			m_onClose();
+		for (auto& cb : m_onCloseCallbacks) {
+			if (cb)
+				cb();
+		}
 	}
 
 	SDL_WindowFlags Window::GetWindowFlags() {
@@ -311,8 +313,8 @@ namespace SDLCore {
 		return this;
 	}
 
-	Window* Window::SetOnClose(Callback cb) {
-		m_onClose = std::move(cb);
+	Window* Window::AddOnClose(const Callback& cb) {
+		m_onCloseCallbacks.emplace_back(cb);
 		return this;
 	}
 

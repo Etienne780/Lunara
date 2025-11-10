@@ -55,7 +55,20 @@ namespace SDLCore {
 		* 
 		* @return Raw pointer of the newly created window
 		*/
-		Window* CreateWindow(std::string name, int width, int height);
+		Window* CreateWindow(const std::string& name, int width, int height);
+
+		/**
+		* @brief Creates a window and automatically links its ID to become invalid on close.
+		*
+		* @param idPtr Pointer to a WindowID that receives the newly created window's ID.
+		*              Will be set to SDLCORE_INVALID_ID when the window closes.
+		* @param name The name of the window
+		* @param width The width of the window
+		* @param height The height of the window
+		*
+		* @return Raw pointer to the newly created window, or nullptr if creation failed.
+		*/
+		Window* CreateWindow(WindowID* idPtr, const std::string& name, int width, int height);
 
 		/**
 		* @brief Removes a Window
