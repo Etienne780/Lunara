@@ -1,4 +1,7 @@
 #pragma once
+#include <SDL3/SDL.h>
+
+#include "types/Vertex.h"
 
 inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
 

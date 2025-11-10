@@ -12,6 +12,11 @@ namespace SDLCore {
         Vector2 texCoordinate;  /**< Normalized texture coordinates, if needed */
 
         Vertex() = default;
+
+        Vertex(float x, float y);
+        Vertex(float x, float y, float r, float g, float b, float a);
+        Vertex(float x, float y, float r, float g, float b, float a, float ux, float vy);
+
         Vertex(const Vector2& pos);
         Vertex(const Vector2& pos, const Vector4& col);
         Vertex(const Vector2& pos, const Vector4& col, const Vector2& tex);

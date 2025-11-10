@@ -6,7 +6,7 @@
 
 namespace SDLCore::Renderer {
 
-	enum BlendMode {
+	enum class BlendMode {
 		NONE				= SDL_BLENDMODE_NONE,				/**< no blending: dstRGBA = srcRGBA */
 		BLEND				= SDL_BLENDMODE_BLEND,				/**< alpha blending: dstRGB = (srcRGB * srcA) + (dstRGB * (1-srcA)), dstA = srcA + (dstA * (1-srcA)) */
 		BLEND_PREMULTIPLIED = SDL_BLENDMODE_BLEND_PREMULTIPLIED,/**< pre-multiplied alpha blending: dstRGBA = srcRGBA + (dstRGBA * (1-srcA)) */
@@ -295,6 +295,8 @@ namespace SDLCore::Renderer {
 	* @param y Y coordinate in pixels.
 	*/
 	void Point(float x, float y);
+
+	void Polygon(const std::vector<Vertex>& vertices, const std::vector<int>& indices = {});
 
 	#pragma endregion
 }

@@ -3,6 +3,17 @@
 
 namespace SDLCore {
 
+    Vertex::Vertex(float x, float y) 
+        : position(Vector2(x, y)) {
+    }
+
+    Vertex::Vertex(float x, float y, float r, float g, float b, float a) 
+        : position(Vector2(x, y)), color(Vector4(r, g, b, a)) {
+    }
+
+    Vertex::Vertex(float x, float y, float r, float g, float b, float a, float ux, float vy) 
+        : position(Vector2(x, y)), color(Vector4(r, g, b, a)), texCoordinate(Vector2(ux, vy)) {
+    }
 
     Vertex::Vertex(const Vector2& pos)
         : position(pos) {

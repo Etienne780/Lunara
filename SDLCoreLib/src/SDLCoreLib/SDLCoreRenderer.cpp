@@ -8,20 +8,40 @@
 
 namespace SDLCore::Renderer {
 
-	static std::weak_ptr<SDL_Renderer> m_renderer;
+    static std::weak_ptr<SDL_Renderer> s_renderer;
 
-    static float m_strokeWidth = 1;
-    static bool m_innerStroke = true;
+    static constexpr bool SET_COLOR = true;
+    static SDL_Color s_activeColor = { 255, 255, 255, 255 };
+    static float s_strokeWidth = 1;
+    static bool s_innerStroke = true;
 
     SDL_Renderer* GetActiveRenderer() {
-        auto rendererPtr = m_renderer.lock();
+        auto rendererPtr = s_renderer.lock();
         if (!rendererPtr)
             return nullptr;
         return rendererPtr.get();
     }
+    
+    static std::vector<SDL_Vertex> ConvertVertices(const std::vector<Vertex>& src, bool setColor = false) {
+        std::vector<SDL_Vertex> dst;
+        dst.reserve(src.size());
+        for (const auto& v : src) {
+            SDL_Vertex sdlV = static_cast<SDL_Vertex>(v);
+            if (setColor) {
+                sdlV.color = SDL_FColor{
+                    s_activeColor.r / 255.0f,
+                    s_activeColor.g / 255.0f,
+                    s_activeColor.b / 255.0f,
+                    s_activeColor.a / 255.0f
+                };
+            }
+            dst.push_back(sdlV);
+        }
+        return dst;
+    }
 
     static std::shared_ptr<SDL_Renderer> GetActiveRenderer(const char* func) {
-        auto rendererPtr = m_renderer.lock();
+        auto rendererPtr = s_renderer.lock();
         if (!rendererPtr) {
             Log::Error("SDLCore::Renderer::{}: Current renderer is null", func);
         }
@@ -30,7 +50,7 @@ namespace SDLCore::Renderer {
 
     void SetWindowRenderer(WindowID winID) {
         if (winID.value == SDLCORE_INVALID_ID) {
-            m_renderer.reset();
+            s_renderer.reset();
             return;
         }
 
@@ -38,29 +58,29 @@ namespace SDLCore::Renderer {
         auto win = app->GetWindow(winID);
 
         if (!win) {
-            m_renderer.reset();
+            s_renderer.reset();
             return;
         }
 
         if (!win->HasRenderer()) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
-            m_renderer.reset();
+            s_renderer.reset();
             return;
         }
 
         std::weak_ptr<SDL_Renderer> rendererWeak = win->GetSDLRenderer();
         if (!rendererWeak.lock()) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
-            m_renderer.reset();
+            s_renderer.reset();
             return;
         }
 
-        m_renderer = rendererWeak;
+        s_renderer = rendererWeak;
     }
 
     void Clear() {
         auto renderer = GetActiveRenderer("Clear");
-        if (!renderer) 
+        if (!renderer)
             return;
         if (!SDL_RenderClear(renderer.get())) {
             Log::Error("SDLCore::Renderer::Clear: Failed to clear renderer: {}", SDL_GetError());
@@ -119,12 +139,13 @@ namespace SDLCore::Renderer {
         }
     }
 
-    #pragma region Color
+#pragma region Color
 
     void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
         auto renderer = GetActiveRenderer("SetColor");
         if (!renderer)
             return;
+        s_activeColor = { r, g, b, a};
         if (!SDL_SetRenderDrawColor(renderer.get(), r, g, b, a)) {
             Log::Error("SDLCore::Renderer::SetColor: Failed to set color ({}, {}, {}, {}): {}", r, g, b, a, SDL_GetError());
         }
@@ -150,21 +171,21 @@ namespace SDLCore::Renderer {
         SetColor(static_cast<Uint8>(rgb.x), static_cast<Uint8>(rgb.y), static_cast<Uint8>(rgb.z), 255);
     }
 
-    #pragma endregion
+#pragma endregion
 
     void SetStrokeWidth(float width) {
         if (width <= 1)
             width = 1;
-        m_strokeWidth = width;
+        s_strokeWidth = width;
     }
 
     void SetInnerStroke(bool value) {
-        m_innerStroke = value;
+        s_innerStroke = value;
     }
 
-    #pragma region Primitives
+#pragma region Primitives
 
-    #pragma region Rectangle
+#pragma region Rectangle
 
     void FillRect(float x, float y, float w, float h) {
         auto renderer = GetActiveRenderer("FillRect");
@@ -216,10 +237,10 @@ namespace SDLCore::Renderer {
 
     void Rect(float x, float y, float w, float h) {
         auto renderer = GetActiveRenderer("Rect");
-        if (!renderer) 
+        if (!renderer)
             return;
 
-        if (m_strokeWidth == 1) {
+        if (s_strokeWidth == 1) {
             SDL_FRect rect{ x, y, w, h };
             if (!SDL_RenderRect(renderer.get(), &rect)) {
                 Log::Error("SDLCore::Renderer::Rect: Failed to draw rect ({}, {}, {}, {}): {}",
@@ -229,9 +250,9 @@ namespace SDLCore::Renderer {
         }
 
         std::vector<SDL_FRect> rects(4);
-        if (m_innerStroke) {
-            float sX = (w < m_strokeWidth) ? w : m_strokeWidth;
-            float sY = (h < m_strokeWidth) ? h : m_strokeWidth;
+        if (s_innerStroke) {
+            float sX = (w < s_strokeWidth) ? w : s_strokeWidth;
+            float sY = (h < s_strokeWidth) ? h : s_strokeWidth;
 
             rects[0] = { x, y, w, sY };          // top
             rects[1] = { x, y + h - sY, w, sY };  // bottom
@@ -239,17 +260,17 @@ namespace SDLCore::Renderer {
             rects[3] = { x + w - sX, y, sX, h };  // right
         }
         else {
-           float s = m_strokeWidth;
+            float s = s_strokeWidth;
 
-           rects[0] = { x - s, y - s, w + s * 2, s };  // top
-           rects[1] = { x - s, y + h, w + s * 2, s };  // bottom
-           rects[2] = { x - s, y - s, s, h + s * 2 };  // left
-           rects[3] = { x + w, y - s, s, h + s * 2 };  // right
+            rects[0] = { x - s, y - s, w + s * 2, s };  // top
+            rects[1] = { x - s, y + h, w + s * 2, s };  // bottom
+            rects[2] = { x - s, y - s, s, h + s * 2 };  // left
+            rects[3] = { x + w, y - s, s, h + s * 2 };  // right
         }
 
         for (auto& rect : rects) {
             if (!SDL_RenderFillRect(renderer.get(), &rect)) {
-                Log::Error("SDLCore::Renderer::Rect: Failed to draw rect ({}, {}, {}, {}): {}", 
+                Log::Error("SDLCore::Renderer::Rect: Failed to draw rect ({}, {}, {}, {}): {}",
                     rect.x, rect.y, rect.w, rect.h, SDL_GetError());
                 break;
             }
@@ -277,24 +298,24 @@ namespace SDLCore::Renderer {
         if (!renderer || count == 0)
             return;
 
-        float s = m_strokeWidth;
+        float s = s_strokeWidth;
         std::vector<SDL_FRect> rects;
-        rects.reserve((m_strokeWidth != 1) ? count * 4 : count);
+        rects.reserve((s_strokeWidth != 1) ? count * 4 : count);
 
         for (size_t i = 0; i < count; i++) {
             const Vector4& t = transforms[i];
 
-            if (m_strokeWidth == 1) {
+            if (s_strokeWidth == 1) {
                 rects.push_back({ t.x, t.y, t.z, t.w });
             }
             else {
-                if (m_innerStroke) {
-                    float sX = (t.z < m_strokeWidth) ? t.z : m_strokeWidth;
-                    float sY = (t.w < m_strokeWidth) ? t.w : m_strokeWidth;
+                if (s_innerStroke) {
+                    float sX = (t.z < s_strokeWidth) ? t.z : s_strokeWidth;
+                    float sY = (t.w < s_strokeWidth) ? t.w : s_strokeWidth;
 
-                    rects.push_back({ t.x, t.y, t.z, sY });         ;// top
+                    rects.push_back({ t.x, t.y, t.z, sY }); ;// top
                     rects.push_back({ t.x, t.y + t.w - sY, t.z, sY });// bottom
-                    rects.push_back({ t.x, t.y, sX, t.w });         ;// left
+                    rects.push_back({ t.x, t.y, sX, t.w }); ;// left
                     rects.push_back({ t.x + t.z - sX, t.y, sX, t.w });// right
                 }
                 else {
@@ -308,12 +329,12 @@ namespace SDLCore::Renderer {
 
         if (!rects.empty()) {
             bool result = true;
-            if (m_strokeWidth == 1)
+            if (s_strokeWidth == 1)
                 result = SDL_RenderRects(renderer.get(), rects.data(), static_cast<int>(rects.size()));
             else
                 result = SDL_RenderFillRects(renderer.get(), rects.data(), static_cast<int>(rects.size()));
 
-            if(!result)
+            if (!result)
                 Log::Error("SDLCore::Renderer::Rects: Failed to draw rects count '{}', {}", count, SDL_GetError());
         }
     }
@@ -322,16 +343,16 @@ namespace SDLCore::Renderer {
         Rects(transforms.data(), transforms.size());
     }
 
-    #pragma endregion
+#pragma endregion
 
-    #pragma region Line
+#pragma region Line
 
     void Line(float x1, float y1, float x2, float y2) {
         auto renderer = GetActiveRenderer("Line");
         if (!renderer)
             return;
 
-        if (m_strokeWidth <= 1) {
+        if (s_strokeWidth <= 1) {
             SDL_RenderLine(renderer.get(), x1, y1, x2, y2);
             return;
         }
@@ -348,7 +369,7 @@ namespace SDLCore::Renderer {
         float nx = -dy;
         float ny = dx;
 
-        float halfStroke = m_strokeWidth / 2.0f;
+        float halfStroke = s_strokeWidth / 2.0f;
 
         SDL_FPoint verts[4] = {
             { x1 + nx * halfStroke, y1 + ny * halfStroke },
@@ -387,7 +408,7 @@ namespace SDLCore::Renderer {
         Line(poins.x, poins.y, poins.z, poins.w);
     }
 
-    #pragma endregion
+#pragma endregion
 
     void Point(float x, float y) {
         auto renderer = GetActiveRenderer("Point");
@@ -396,6 +417,28 @@ namespace SDLCore::Renderer {
 
         if (!SDL_RenderPoint(renderer.get(), x, y)) {
             Log::Error("SDLCore::Renderer::Point: Failed to draw point ({}, {}): {}", x, y, SDL_GetError());
+        }
+    }
+
+    void Polygon(const std::vector<Vertex>& vertices, const std::vector<int>& indices) {
+        auto renderer = GetActiveRenderer("Polygon");
+        if (!renderer)
+            return;
+
+        if (vertices.empty()) {
+            Log::Error("SDLCore::Renderer::Polygon: Cant render polygon, vertices are empty");
+            return;
+        }
+
+        auto sdlVertices = ConvertVertices(vertices, SET_COLOR);
+        const int* iData = (indices.size() > 0) ? indices.data() : nullptr;
+        if (!SDL_RenderGeometry(renderer.get(), nullptr, sdlVertices.data(), static_cast<int>(vertices.size()), iData, static_cast<int>(indices.size()))) {
+            if (iData) {
+                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}, indicesCount: {}): {}", vertices.size(), indices.size(), SDL_GetError());
+            }
+            else {
+                Log::Error("SDLCore::Renderer::Polygon: Failed to draw polygon(verticesCount: {}): {}", vertices.size(), SDL_GetError());
+            }
         }
     }
 
