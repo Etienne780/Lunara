@@ -76,8 +76,8 @@ namespace SDLCore {
             }
         }
 
-        for (auto id : m_windowsToClose) {
-            auto win = GetWindow(id);
+        for (auto& id : m_windowsToClose) {
+            auto* win = GetWindow(id);
             if (win)
                 win->DestroyWindow();
             RemoveWindow(id);
