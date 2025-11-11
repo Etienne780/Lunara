@@ -1,4 +1,4 @@
-#ifdef _WIN32
+ï»¿#ifdef _WIN32
 #include <windows.h>
 #elif __linux__
 #include <unistd.h>
@@ -8,15 +8,15 @@
 #include <limits.h>
 #endif
 
+#include <algorithm>
 #include <fstream>
-#include <filesystem>
 
 #include "CoreLib\tinyfiledialogs.h"
 #include <CoreLib\Log.h>
 #include "CoreLib\File.h" 
 
 
-File::File(const std::string& path) 
+File::File(const SystemFilePath& path)
     : m_path(path) {
 }
 
@@ -144,7 +144,7 @@ bool File::ReadAll() {
     return true;
 }
 
-bool File::ReadAllBinary(std::vector<unsigned char>& outData) {
+bool File::ReadAllRaw(std::vector<unsigned char>& outData) {
     if (m_fileState != FileState::FILE_READ || !m_ifstream.is_open()) {
         Log::Error("File: Cannot read binary, file '{}' not open for reading!", m_path);
         return false;
@@ -169,7 +169,7 @@ bool File::ReadAllBinary(std::vector<unsigned char>& outData) {
     return true;
 }
 
-bool File::ReadAllBinary() {
+bool File::ReadAllRaw() {
     if (m_fileState != FileState::FILE_READ || !m_ifstream.is_open()) {
         Log::Error("File: Cannot read binary, file '{}' not open for reading!", m_path);
         return false;
@@ -207,15 +207,19 @@ bool File::IsFileOpen() const {
     return false;
 }
 
+FileState File::GetFileState() const {
+    return m_fileState;
+}
+
 std::string File::GetData() const {
     return m_data;
 }
 
-const std::string& File::GetDataPtr() {
+const std::string& File::GetDataRef() {
     return m_data;
 }
 
-const std::vector<unsigned char>& File::GetBinaryData() const {
+const std::vector<unsigned char>& File::GetRawData() const {
     return m_binaryData;
 }
 
@@ -228,8 +232,12 @@ size_t File::GetFileSize() const {
     return static_cast<size_t>(file.tellg());
 }
 
-std::string File::GetFilePath() const {
+SystemFilePath File::GetFilePath() const {
     return m_path;
+}
+
+SystemFilePath File::GetParentPath() const {
+    return m_path.parent_path(); 
 }
 
 std::string File::GetFileExtension() const {
@@ -240,12 +248,16 @@ std::string File::GetFileName() const {
     return File::GetFileName(m_path);
 }
 
-File& File::SetFilePath(const std::string& path) {
+File& File::SetFilePath(const SystemFilePath& path) {
     m_path = path;
     return *this;
 }
 
-std::string File::GetExecutablePath() {
+std::string File::ToString() const {
+    return FormatUtils::formatString("{} ({} bytes)", GetFileName(), GetFileSize());
+}
+
+std::filesystem::path File::GetExecutablePath() {
 #ifdef _WIN32
     char buffer[MAX_PATH];
     DWORD size = GetModuleFileNameA(NULL, buffer, MAX_PATH);
@@ -269,70 +281,115 @@ std::string File::GetExecutablePath() {
 
 #pragma region static
 
-std::string File::GetFileExtension(const std::string& path) {
-    size_t pos = path.find_last_of('.');
-    if (pos == std::string::npos) return "";
-    return path.substr(pos + 1);
+std::string File::GetFileExtension(const SystemFilePath& path) {
+    if (!path.has_extension()) return "";
+    std::string ext = path.extension().string().substr(1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    return ext;
 }
 
-std::string File::GetFileName(const std::string& path) {
-    size_t pos = path.find_last_of("/\\");
-    if (pos == std::string::npos) return "";
-    return path.substr(pos + 1);
+std::string File::GetFileName(const SystemFilePath& path) {
+    return path.has_filename() ? path.filename().string() : "";
 }
 
-bool File::Exists(const std::string& path) {
-    std::ifstream file(path);
-    return file.good();
+
+bool File::Exists(const SystemFilePath& path) {
+    return std::filesystem::exists(path);
 }
 
-bool File::DeleteFile(const std::string& path) {
-    if (std::remove(path.c_str()) != 0) {
-        Log::Error("File: Could not delete file '{}'!", path);
+bool File::DeleteFile(const SystemFilePath& path) {
+    try {
+        if (!std::filesystem::exists(path)) {
+            Log::Warn("File::DeleteFile: File '{}' does not exist", path.string());
+            return false;
+        }
+
+        if (!std::filesystem::is_regular_file(path)) {
+            Log::Warn("File::DeleteFile: '{}' is not a regular file", path.string());
+            return false;
+        }
+
+        return std::filesystem::remove(path);
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        Log::Error("File::DeleteFile: Failed to delete '{}': {}", path.string(), e.what());
         return false;
     }
-    return true;
 }
 
-bool  File::CreateDir(const std::string& dir) {
-    return std::filesystem::create_directories(dir);
+bool File::CreateDir(const SystemFilePath& dir) {
+    try {
+        if (std::filesystem::exists(dir))
+            return std::filesystem::is_directory(dir);
+
+        return std::filesystem::create_directories(dir);
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        Log::Error("File::CreateDir: Failed to create directory '{}': {}", dir.string(), e.what());
+        return false;
+    }
 }
 
-std::string File::SelectFolderDialog(const std::string& title, const std::string& defaultPath) {
+SystemFilePath File::SelectFolderDialog(const std::string& title, const SystemFilePath& defaultPath) {
     const char* result = tinyfd_selectFolderDialog(
         title.c_str(),
-        defaultPath.empty() ? nullptr : defaultPath.c_str()
+        defaultPath.empty() ? nullptr : defaultPath.string().c_str()
     );
-    return result ? std::string(result) : std::string();
+
+    return result ? SystemFilePath(result) : SystemFilePath{};
 }
 
-std::string File::OpenFileDialog(const std::string& title, const char* filter) {
-    return OpenFileDialog(title, nullptr, filter);
+SystemFilePath File::OpenFileDialog(const std::string& title, const char* filter) {
+    return OpenFileDialog(title, filter, {});
 }
 
-std::string File::OpenFileDialog(const std::string& title, const char* filter, const std::string& defaultPath) {
+SystemFilePath File::OpenFileDialog(const std::string& title, const char* filter, const SystemFilePath& defaultPath) {
     const char* filterPatterns[1] = { nullptr };
     int patternCount = 0;
 
     if (filter && std::strlen(filter) > 0) {
-        // Angenommen, filter ist im Format "Description\0*.ext\0"
-        // -> Zweiten Teil extrahieren
-        const char* pattern = filter;
-        pattern += std::strlen(pattern) + 1; // Beschreibung überspringen
-        filterPatterns[0] = pattern;
-        patternCount = 1;
+        // Extract the second null-separated part of the filter string ("Description\0*.ext\0")
+        const char* pattern = filter + std::strlen(filter) + 1;
+        if (*pattern != '\0') {
+            filterPatterns[0] = pattern;
+            patternCount = 1;
+        }
     }
 
     const char* result = tinyfd_openFileDialog(
         title.c_str(),
-        defaultPath.empty() ? nullptr : defaultPath.c_str(),
+        defaultPath.empty() ? nullptr : defaultPath.string().c_str(),
         patternCount,
-        patternCount > 0 ? filterPatterns : nullptr,
-        nullptr,
-        0
+        (patternCount > 0) ? filterPatterns : nullptr,
+        nullptr, // Optional description (not needed when using a combined filter string)
+        0        // Multiple selection disabled
     );
 
-    return result ? std::string(result) : std::string();
+    return result ? SystemFilePath(result) : SystemFilePath{};
+}
+
+SystemFilePath File::SaveFileDialog(const std::string& title, const char* filter, const SystemFilePath& defaultPath) {
+    const char* filterPatterns[1] = { nullptr };
+    int patternCount = 0;
+
+    if (filter && std::strlen(filter) > 0) {
+        // Extract the second null-separated part of the filter string ("Description\0*.ext\0")
+        const char* pattern = filter + std::strlen(filter) + 1;
+        if (*pattern != '\0') {
+            filterPatterns[0] = pattern;
+            patternCount = 1;
+        }
+    }
+
+    const char* result = tinyfd_saveFileDialog(
+        title.c_str(),
+        defaultPath.empty() ? nullptr : defaultPath.string().c_str(),
+        patternCount,
+        (patternCount > 0) ? filterPatterns : nullptr,
+        nullptr // Optional description (not needed when using a combined filter string)
+    );
+
+    return result ? SystemFilePath(result) : SystemFilePath{};
 }
 
 std::string File::ConvertFilterString(const std::string& extensions) {
@@ -364,7 +421,7 @@ std::string File::ConvertFilterString(const std::string& extensions) {
     return result;
 }
 
-std::string File::GetExecutableDir() {
+std::filesystem::path File::GetExecutableDir() {
     return std::filesystem::path(GetExecutablePath()).parent_path().string() + "\\";
 }
 
