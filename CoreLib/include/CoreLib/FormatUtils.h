@@ -88,6 +88,11 @@ public:
         return std::string(arr);
     }
 
+    /*
+    * Example specification:
+    * template<>
+    * static inline std::string FormatUtils::toString<Vector2>(Vector2 value) { return value.ToString(); }
+    */
     template<typename T>
     static std::string toString(T value) {
         if constexpr (std::is_same_v<T, bool>) {
