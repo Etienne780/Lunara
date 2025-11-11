@@ -84,6 +84,20 @@ namespace SDLCore {
 
 		size_t GetWindowCount() const;
 
+		/**
+		* @brief Sets the application's frame rate cap or VSync mode.
+		*
+		* This function configures how the application's rendering loop limits its frame rate.
+		* Depending on the value, it either enables vertical synchronization (VSync),
+		* adaptive VSync, or sets a custom FPS cap. Negative special values are used
+		* to represent different synchronization modes.
+		*
+		* @param value Frame cap mode or FPS limit.
+		* - APPLICATION_FPS_UNCAPPED: No frame rate limit.
+		* - APPLICATION_FPS_VSYNC_ON: Enables standard VSync.
+		* - APPLICATION_FPS_VSYNC_ADAPTIVE_ON: Enables adaptive VSync.
+		* - Any positive integer: Caps the frame rate to the specified FPS value.
+		*/
 		void SetFPSCap(int value);
 
 		virtual void OnStart() = 0;
