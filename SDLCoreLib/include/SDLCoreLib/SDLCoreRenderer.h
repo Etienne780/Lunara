@@ -4,6 +4,10 @@
 #include <CoreLib/Math/Vector4.h>
 #include "Window.h"
 
+namespace SDLCore {
+	class Vertex;
+}
+
 namespace SDLCore::Renderer {
 
 	enum class BlendMode {
@@ -22,6 +26,12 @@ namespace SDLCore::Renderer {
 	* @return Pointer to the currently active SDL_Renderer, or nullptr if none is set.
 	*/
 	SDL_Renderer* GetActiveRenderer();
+
+	/**
+	* @brief Returns the ID of the currently active Window.
+	* @return ID of the active window.
+	*/
+	WindowID GetActiveWindowID();
 
 	/**
 	* @brief Sets the SDL renderer associated with a given window ID as the current renderer.

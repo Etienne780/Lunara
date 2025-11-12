@@ -1,8 +1,6 @@
 #pragma once
 #include <SDL3/SDL.h>
 
-#include "types/Vertex.h"
-
 inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
 inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
 inline constexpr int APPLICATION_FPS_VSYNC_ON = -1;
@@ -39,4 +37,18 @@ namespace SDLCore {
 	struct WindowTag {};
 	using WindowID = SDLCoreID<WindowTag>;
 
+}
+
+template<>
+static inline std::string FormatUtils::toString<SDLCore::SDLCoreID<SDLCore::WindowTag>>(SDLCore::WindowID id) {
+	return FormatUtils::toString(id.value);
+}
+
+namespace std {
+	template<typename Tag>
+	struct hash<SDLCore::SDLCoreID<Tag>> {
+		size_t operator()(const SDLCore::SDLCoreID<Tag>& id) const noexcept {
+			return std::hash<unsigned int>{}(id.value);
+		}
+	};
 }

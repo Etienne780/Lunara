@@ -1,0 +1,230 @@
+#include <SDL3_image/SDL_image.h>
+#include <CoreLib/Log.h>
+
+#include "Application.h"
+#include "SDLCoreRenderer.h"
+#include "types/Texture.h"
+
+namespace SDLCore {
+
+    Texture::Texture(const std::string& path, Type type)
+        : m_type(type)
+    {
+
+        int ver = IMG_Version();
+        m_surface = IMG_Load(path.c_str());
+        if (!m_surface) {
+            Log::Error("SDLCore::Texture: Failed to load '{}': {}", path, SDL_GetError());
+            return;
+        }
+        
+        m_width = m_surface->w;
+        m_height = m_surface->h;
+    }
+
+    Texture::Texture(const SystemFilePath& path, Type type)
+        : Texture(path.string(), type) {
+    }
+
+    Texture::~Texture() {
+        Cleanup();
+    }
+
+    Texture::Texture(Texture&& other) noexcept {
+        MoveFrom(std::move(other));
+    }
+
+    Texture& Texture::operator=(Texture&& other) noexcept {
+        if (this != &other) {
+            Cleanup();
+            MoveFrom(std::move(other));
+        }
+        return *this;
+    }
+
+    bool Texture::CreateForWindow(WindowID windowID) {
+        if (!m_surface)
+            return false;
+
+        auto renderer = GetRenderer(windowID);
+        if (!renderer) {
+            Log::Error("Renderer is null for window {}", windowID.value);
+            return false;
+        }
+
+        // Konvertiere Surface in gängiges Format
+        SDL_Surface* formatted = SDL_ConvertSurface(m_surface, SDL_PIXELFORMAT_RGBA8888);
+        if (!formatted) {
+            Log::Error("Failed to convert surface: {}", SDL_GetError());
+            return false;
+        }
+
+        auto existing = m_textures.find(windowID);
+        if (existing != m_textures.end()) {
+            SDL_DestroyTexture(existing->second);
+            m_textures.erase(existing);
+        }
+
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, formatted);
+        SDL_DestroySurface(formatted);
+
+        if (!tex) {
+            Log::Error("Failed to create texture for window {}: {}", windowID.value, SDL_GetError());
+            return false;
+        }
+
+        m_textures[windowID] = tex;
+        return true;
+    }
+
+    void Texture::Render(float x, float y, float w, float h, const SDL_FRect* src) {
+        WindowID currentWinID = Renderer::GetActiveWindowID();
+        auto it = m_textures.find(currentWinID);
+        if (it == m_textures.end()) {
+            if (!CreateForWindow(currentWinID)) {
+                Log::Error("SDLCore::Texture::Render: Failed to create texture for active window {}!", currentWinID);
+                return;
+            }
+            it = m_textures.find(currentWinID);
+            if (it == m_textures.end())
+                return;
+        }
+
+        SDL_Texture* tex = it->second;
+        if (!tex)
+            return;
+
+        if (w <= 0) w = static_cast<float>(m_width);
+        if (h <= 0) h = static_cast<float>(m_height);
+
+        auto renderer = GetRenderer(currentWinID);
+        if (!renderer) {
+            Log::Error("SDLCore::Texture::Render: Failed to render texture, renderer of window '{}' is null!", currentWinID);
+            return;
+        }
+
+        SDL_FRect dst{ x, y, w, h };
+        if (!SDL_RenderTexture(renderer, tex, src, &dst))
+            Log::Error("SDLCore::Texture::Render: Failed to render texture: {}", SDL_GetError());
+    }
+
+    void Texture::Update(WindowID windowID, const void* pixels, int pitch) {
+        if (m_type != Type::DYNAMIC)
+            return;
+
+        auto it = m_textures.find(windowID);
+        if (it == m_textures.end())
+            return;
+
+        if (SDL_UpdateTexture(it->second, nullptr, pixels, pitch))
+            Log::Error("SDLCore::Texture::Update: Failed to update texture for window {}: {}", windowID, SDL_GetError());
+    }
+
+    void Texture::FreeForWindow(WindowID windowID) {
+        auto it = m_textures.find(windowID);
+        if (it != m_textures.end()) {
+            SDL_DestroyTexture(it->second);
+            m_textures.erase(it);
+        }
+    }
+
+    Texture* Texture::SetRotation(float rotation) {
+        m_rotation = rotation;
+        return this;
+    }
+
+    Texture* Texture::SetCenter(const Vector2& center) {
+        m_center = center;
+        return this;
+    }
+
+    Texture* Texture::SetColorTint(const Vector3& color) {
+        m_colorTint = color;
+        return this;
+    }
+
+    Texture* Texture::SetFlip(Flip flip) {
+        m_flip = flip;
+        return this;
+    }
+
+    float Texture::GetRotation() const { 
+        return m_rotation; 
+    }
+
+    Vector2 Texture::GetCenter() const { 
+        return m_center; 
+    }
+
+    Vector3 Texture::GetColorTint() const { 
+        return m_colorTint; 
+    }
+
+    Texture::Flip Texture::GetFlip() const { 
+        return m_flip; 
+    }
+
+    Texture* Texture::Reset(TextureParams ignoreMask) {
+        if (!(ignoreMask & TextureParams::ROTATION))
+            m_rotation = 0.0f;
+
+        if (!(ignoreMask & TextureParams::CENTER))
+            m_center = { 0.0f, 0.0f };
+
+        if (!(ignoreMask & TextureParams::COLOR_TINT))
+            m_colorTint = { 1.0f, 1.0f, 1.0f };
+
+        if (!(ignoreMask & TextureParams::FLIP))
+            m_flip = Flip::NONE;
+
+        if (!(ignoreMask & TextureParams::TYPE))
+            m_type = Type::STATIC;
+
+        return this;
+    }
+
+    SDL_Renderer* Texture::GetRenderer(WindowID winID) {
+        auto app = Application::GetInstance();
+        if (!app)
+            return nullptr;
+
+        auto window = app->GetWindow(winID);
+        if (!window)
+            return nullptr;
+
+        auto renderer = window->GetSDLRenderer().lock();
+        if (!renderer)
+            return nullptr;
+
+        return renderer.get();
+    }
+
+    void Texture::Cleanup() {
+        for (auto& [_, tex] : m_textures)
+            SDL_DestroyTexture(tex);
+        m_textures.clear();
+
+        if (m_surface) {
+            SDL_DestroySurface(m_surface);
+            m_surface = nullptr;
+        }
+    }
+
+    void Texture::MoveFrom(Texture&& other) noexcept {
+        if (this == &other) return;
+        Cleanup();
+
+        m_surface = other.m_surface;
+        other.m_surface = nullptr;
+
+        m_textures = std::move(other.m_textures);
+        m_width = other.m_width;
+        m_height = other.m_height;
+        m_type = other.m_type;
+
+        other.m_width = 0;
+        other.m_height = 0;
+        other.m_textures.clear();
+    }
+
+}

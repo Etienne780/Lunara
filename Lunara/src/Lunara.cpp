@@ -19,7 +19,10 @@ struct MovingRect {
 static SDLCore::WindowID winFillID;
 static SDLCore::WindowID winStrokeID;
 static SDLCore::WindowID winPolygonID;
+static SDLCore::WindowID winImageID;
 std::vector<MovingRect> movingRects;
+
+SDLCore::Texture test;
 
 std::vector<SDLCore::Vertex> vertices;
 std::vector<Vector2> velocity;
@@ -109,6 +112,8 @@ void InputTest() {
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
+    test = SDLCore::Texture(SystemFilePath("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png"));
+
     {
         using namespace SDLCore;
 
@@ -122,6 +127,9 @@ void Lunara::OnStart() {
     CreateWindow(&winFillID, "FillRects", 800, 800);
     CreateWindow(&winStrokeID, "StrokeRects", 800, 800);
     CreateWindow(&winPolygonID, "Polygon", 800, 800);
+    CreateWindow(&winImageID, "Image", 800, 800);
+
+    test.CreateForWindow(winImageID);
 
     int count = 50;
     for (int i = 0; i < count; ++i) {
@@ -231,6 +239,22 @@ void Lunara::OnUpdate() {
         if (Input::KeyJustPressed(KeyCode::ESCAPE))
             RemoveWindow(winPolygonID);
     }
+
+    if (winImageID != SDLCORE_INVALID_ID) {
+        Input::SetWindow(winImageID);
+        RE::SetWindowRenderer(winImageID);
+        RE::SetColor(120, 50, 70);
+        RE::Clear();
+
+        for (auto& mr : movingRects)
+            test.Render(mr.rect.x, mr.rect.y, mr.rect.z, mr.rect.w);
+
+        RE::Present();
+
+        // needs to be called after using the window. becaus nullptr and so ...
+        if (Input::KeyJustPressed(KeyCode::ESCAPE))
+            RemoveWindow(winImageID);
+    }
     static double lastTime = -1;
     if (lastTime < Time::GetTimeSec()) {
         Log::Print(SDLCore::Time::GetFrameRate());
@@ -289,6 +313,8 @@ void MoveRects() {
     if (winStrokeID != SDLCORE_INVALID_ID)
         win = app->GetWindow(winStrokeID);
     else if (winFillID != SDLCORE_INVALID_ID)
+        win = app->GetWindow(winFillID);
+    else if (winImageID != SDLCORE_INVALID_ID)
         win = app->GetWindow(winFillID);
 
     if (!win)

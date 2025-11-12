@@ -2,16 +2,18 @@
 
 #include <SDL3/SDL.h>
 #include <CoreLib/Log.h>
-#include <Application.h>
 
+#include "Application.h"
+#include "types/Vertex.h"
 #include "SDLCoreRenderer.h"
 
 namespace SDLCore::Renderer {
 
     static std::weak_ptr<SDL_Renderer> s_renderer;
+    static WindowID s_winID { SDLCORE_INVALID_ID };
 
     static constexpr bool SET_COLOR = true;
-    static SDL_Color s_activeColor = { 255, 255, 255, 255 };
+    static SDL_Color s_activeColor { 255, 255, 255, 255 };
     static float s_strokeWidth = 1;
     static bool s_innerStroke = true;
 
@@ -20,6 +22,10 @@ namespace SDLCore::Renderer {
         if (!rendererPtr)
             return nullptr;
         return rendererPtr.get();
+    }
+
+    WindowID GetActiveWindowID() {
+        return s_winID;
     }
     
     static std::vector<SDL_Vertex> ConvertVertices(const std::vector<Vertex>& src, bool setColor = false) {
@@ -50,20 +56,24 @@ namespace SDLCore::Renderer {
 
     void SetWindowRenderer(WindowID winID) {
         if (winID.value == SDLCORE_INVALID_ID) {
+            s_winID.value = SDLCORE_INVALID_ID;
             s_renderer.reset();
             return;
         }
 
+        s_winID = winID;
         auto app = Application::GetInstance();
         auto win = app->GetWindow(winID);
 
         if (!win) {
+            s_winID.value = SDLCORE_INVALID_ID;
             s_renderer.reset();
             return;
         }
 
         if (!win->HasRenderer()) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
+            s_winID.value = SDLCORE_INVALID_ID;
             s_renderer.reset();
             return;
         }
@@ -71,6 +81,7 @@ namespace SDLCore::Renderer {
         std::weak_ptr<SDL_Renderer> rendererWeak = win->GetSDLRenderer();
         if (!rendererWeak.lock()) {
             Log::Error("SDLCore::Renderer::SetWindowRenderer: Renderer of window '{}' is null or destroyed!", win->GetName());
+            s_winID.value = SDLCORE_INVALID_ID;
             s_renderer.reset();
             return;
         }
