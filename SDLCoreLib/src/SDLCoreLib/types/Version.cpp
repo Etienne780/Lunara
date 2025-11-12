@@ -1,5 +1,5 @@
 #include <CoreLib/Log.h>
-#include "Version.h"
+#include "types/Version.h"
 
 namespace SDLCore {
 
