@@ -1,5 +1,7 @@
 #pragma once
+#include <filesystem>
 #include <SDL3/SDL.h>
+#include <CoreLib/FormatUtils.h>
 
 inline constexpr unsigned int SDLCORE_INVALID_ID = std::numeric_limits<unsigned int>::max();
 inline constexpr int APPLICATION_FPS_UNCAPPED = 0;
@@ -7,6 +9,7 @@ inline constexpr int APPLICATION_FPS_VSYNC_ON = -1;
 inline constexpr int APPLICATION_FPS_VSYNC_ADAPTIVE_ON = -2;
 
 class Vector4;
+typedef std::filesystem::path SystemFilePath;
 
 namespace SDLCore {
 
