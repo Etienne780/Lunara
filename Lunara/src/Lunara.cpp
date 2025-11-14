@@ -108,10 +108,39 @@ void InputTest() {
     }
 }
 
+/*
+Font() = default;
+Font(const SystemFilePath& path, std::vector<int> sizes = {}, size_t cachedSizes = 10);
+
+Font* SelectSize(int size);
+Font* SetCachSize(size_t size);
+Font* Setpath(const SystemFilePath& path);
+Font* Clear();
+*/
+
 bool MovePolygon();
 void MoveRects();
 void Lunara::OnStart() {
-    exampleImage = SDLCore::Texture(SystemFilePath("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png"));
+    {
+        using namespace SDLCore;
+
+        Font font1;
+        font1.SelectSize(10);
+        font1.Setpath("D:/Dev/GameDesign/Fonts/AmazDooMLeft.ttf");
+        font1.SelectSize(12);
+
+        font1.SetCachSize(2);
+
+        font1.SelectSize(13);
+        font1.SelectSize(14);
+        font1.SelectSize(15);
+
+        font1.Clear();
+
+        Font font2("D:/Dev/GameDesign/Fonts/AmazDooMLeft.ttf", { 20, 10, 12, 13, 32 }, 3);
+    }
+    
+    exampleImage = SDLCore::Texture("C:/Users/Admin/Pictures/Screenshots/Screenshot 2024-03-28 173226.png");
 
     {
         using namespace SDLCore;

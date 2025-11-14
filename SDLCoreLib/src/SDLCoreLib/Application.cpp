@@ -36,7 +36,7 @@ namespace SDLCore {
             cancelStart = 1;
         }
 
-        if (TTF_Init()) {
+        if (!TTF_Init()) {
             m_cancelErrorMsg = SDL_GetError();
             cancelStart = 2;
         }

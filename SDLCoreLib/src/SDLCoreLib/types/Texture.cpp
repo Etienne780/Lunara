@@ -74,10 +74,7 @@ namespace SDLCore {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        if (this != &other) {
-            Cleanup();
-            MoveFrom(std::move(other));
-        }
+        MoveFrom(std::move(other));
         return *this;
     }
 
@@ -127,18 +124,30 @@ namespace SDLCore {
         if (!tex)
             return;
 
+        // Use original texture size if w/h are unspecified
         if (w <= 0) w = static_cast<float>(m_width);
         if (h <= 0) h = static_cast<float>(m_height);
 
-        auto renderer = GetRenderer(currentWinID);
+        SDL_Renderer* renderer = GetRenderer(currentWinID);
         if (!renderer) {
             Log::Error("SDLCore::Texture::Render: Failed to render texture, renderer of window '{}' is null!", currentWinID);
             return;
         }
 
+        Uint8 r = static_cast<Uint8>(m_colorTint.x);
+        Uint8 g = static_cast<Uint8>(m_colorTint.y);
+        Uint8 b = static_cast<Uint8>(m_colorTint.z);
+        SDL_SetTextureColorMod(tex, r, g, b);
+
         SDL_FRect dst{ x, y, w, h };
-        if (!SDL_RenderTexture(renderer, tex, src, &dst))
-            Log::Error("SDLCore::Texture::Render: Failed to render texture: {}", SDL_GetError());
+        SDL_FPoint center;
+        center.x = dst.x + m_center.x * dst.w;
+        center.y = dst.y + m_center.y * dst.h;
+
+        SDL_FlipMode sdlFlip = static_cast<SDL_FlipMode>(m_flip);
+        if (!SDL_RenderTextureRotated(renderer, tex, src, &dst, m_rotation, &center, sdlFlip)) {
+            Log::Error("SDLCore::Texture::Render: Failed to render rotated texture: {}", SDL_GetError());
+        }
     }
 
     void Texture::Update(WindowID windowID, const void* pixels, int pitch) {
