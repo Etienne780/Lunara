@@ -2,6 +2,7 @@
 #include <CoreLib/Math/Vector2.h>
 #include <CoreLib/Math/Vector3.h>
 #include <CoreLib/Math/Vector4.h>
+#include <SDLCoreTypes.h>
 #include "Window.h"
 
 namespace SDLCore {
@@ -53,19 +54,119 @@ namespace SDLCore::Renderer {
 	*/
 	void Present();
 
+	#pragma region ViewportAndClipping
+
 	/**
-	* @brief Sets the current viewport (rendering region of the window).
-	* @param x X position in pixels.
-	* @param y Y position in pixels.
+	* @brief Returns the current render viewport.
+	* @return Current viewport, or {0,0,0,0} if unavailable.
+	*/
+	SDLCore::Rect GetViewport();
+
+	/**
+	* @brief Sets the render viewport.
+	* @param x Position X in pixels.
+	* @param y Position Y in pixels.
 	* @param w Width in pixels.
 	* @param h Height in pixels.
 	*/
 	void SetViewport(int x, int y, int w, int h);
 
 	/**
-	* @brief Resets the viewport to cover the entire window.
+	* @brief Sets the render viewport.
+	* @param pos Position in pixels.
+	* @param w Width in pixels.
+	* @param h Height in pixels.
+	*/
+	void SetViewport(const Vector2& pos, int w, int h);
+
+	/**
+	* @brief Sets the render viewport.
+	* @param x Position X in pixels.
+	* @param y Position Y in pixels.
+	* @param size Size in pixels.
+	*/
+	void SetViewport(int x, int y, const Vector2& size);
+
+	/**
+	 * @brief Sets the render viewport.
+	 * @param pos Position in pixels.
+	 * @param size Size in pixels.
+	 */
+	void SetViewport(const Vector2& pos, const Vector2& size);
+
+	/**
+	* @brief Sets the render viewport.
+	* @param transform (x, y, w, h)
+	*/
+	void SetViewport(const Vector4& transform);
+
+	/**
+	* @brief Sets the render viewport.
+	* @param rect Viewport rectangle.
+	*/
+	void SetViewport(const SDLCore::Rect& rect);
+
+	/**
+	* @brief Resets the viewport to the full window.
 	*/
 	void ResetViewport();
+
+	/**
+	* @brief Returns the current clipping rectangle.
+	* @return Current clip rect, or {0,0,0,0} if unavailable.
+	*/
+	SDLCore::Rect GetClipRect();
+
+	/**
+	* @brief Sets the clipping rectangle.
+	* @param x Position X in pixels.
+	* @param y Position Y in pixels.
+	* @param w Width in pixels.
+	* @param h Height in pixels.
+	*/
+	void SetClipRect(int x, int y, int w, int h);
+
+	/**
+	 * @brief Sets the clipping rectangle.
+	 * @param pos Position in pixels.
+	 * @param w Width in pixels.
+	 * @param h Height in pixels.
+	 */
+	void SetClipRect(const Vector2& pos, int w, int h);
+
+	/**
+	* @brief Sets the clipping rectangle.
+	* @param x Position X in pixels.
+	* @param y Position Y in pixels.
+	* @param size Size in pixels.
+	*/
+	void SetClipRect(int x, int y, const Vector2& size);
+
+	/**
+	* @brief Sets the clipping rectangle.
+	* @param pos Position in pixels.
+	* @param size Size in pixels.
+	*/
+	void SetClipRect(const Vector2& pos, const Vector2& size);
+
+	/**
+	* @brief Sets the clipping rectangle.
+	* @param transform (x, y, w, h)
+	*/
+	void SetClipRect(const Vector4& transform);
+
+	/**
+	* @brief Sets the clipping rectangle.
+	* @param rect Clip rectangle.
+	*/
+	void SetClipRect(const SDLCore::Rect& rect);
+
+	/**
+	* @brief Clears the clip rectangle (disables clipping).
+	*/
+	void ResetClipRect();
+
+	#pragma endregion
 
 	/**
 	* @brief Enables or disables blending mode.
@@ -309,4 +410,7 @@ namespace SDLCore::Renderer {
 	void Polygon(const std::vector<Vertex>& vertices, const std::vector<int>& indices = {});
 
 	#pragma endregion
+
+
+
 }

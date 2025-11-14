@@ -107,6 +107,18 @@ namespace SDLCore::Renderer {
         }
     }
 
+    SDLCore::Rect GetViewport() {
+        SDL_Rect viewport{ 0, 0, 0, 0 };
+        auto renderer = GetActiveRenderer("GetViewport");
+        if (!renderer)
+            return viewport;
+
+        if (!SDL_GetRenderViewport(renderer.get(), &viewport)) {
+            Log::Error("SDLCore::Renderer::GetViewport: Failed to get viewport: {}", SDL_GetError());
+        }
+        return viewport;
+    }
+
     void SetViewport(int x, int y, int w, int h) {
         auto renderer = GetActiveRenderer("SetViewport");
         if (!renderer)
@@ -119,6 +131,28 @@ namespace SDLCore::Renderer {
         }
     }
 
+    void SetViewport(const Vector2& pos, int w, int h) {
+        SetViewport(static_cast<int>(pos.x), static_cast<int>(pos.y), w, h);
+    }
+
+    void SetViewport(int x, int y, const Vector2& size) {
+        SetViewport(x, y, static_cast<int>(size.x), static_cast<int>(size.y));
+    }
+
+    void SetViewport(const Vector2& pos, const Vector2& size) {
+        SetViewport(static_cast<int>(pos.x), static_cast<int>(pos.y), 
+            static_cast<int>(size.x), static_cast<int>(size.y));
+    }
+
+    void SetViewport(const Vector4& trans) {
+        SetViewport(static_cast<int>(trans.x), static_cast<int>(trans.y),
+            static_cast<int>(trans.z), static_cast<int>(trans.w));
+    }
+
+    void SetViewport(const SDLCore::Rect& rect) {
+        SetViewport(rect.x, rect.y, rect.w, rect.h);
+    }
+
     void ResetViewport() {
         auto renderer = GetActiveRenderer("ResetViewport");
         if (!renderer)
@@ -126,6 +160,62 @@ namespace SDLCore::Renderer {
 
         if (!SDL_SetRenderViewport(renderer.get(), nullptr)) {
             Log::Error("SDLCore::Renderer::ResetViewport: Failed to reset viewport: {}", SDL_GetError());
+        }
+    }
+
+    SDLCore::Rect GetClipRect() {
+        SDL_Rect clipRect{ 0, 0, 0, 0 };
+        auto renderer = GetActiveRenderer("GetClipRect");
+        if (!renderer)
+            return clipRect;
+
+        if (!SDL_GetRenderClipRect(renderer.get(), &clipRect)) {
+            Log::Error("SDLCore::Renderer::GetClipRect: Failed to get clipRect: {}", SDL_GetError());
+        }
+        return clipRect;
+    }
+
+    void SetClipRect(int x, int y, int w, int h) {
+        auto renderer = GetActiveRenderer("SetClipRect");
+        if (!renderer)
+            return;
+
+        SDL_Rect clipRect{ x, y, w, h };
+        if (!SDL_SetRenderClipRect(renderer.get(), &clipRect)) {
+            Log::Error("SDLCore::Renderer::SetClipRect: Failed to set clipRect ({}, {}, {}, {}): {}",
+                x, y, w, h, SDL_GetError());
+        }
+    }
+
+    void SetClipRect(const Vector2& pos, int w, int h) {
+        SetClipRect(static_cast<int>(pos.x), static_cast<int>(pos.y), w, h);
+    }
+
+    void SetClipRect(int x, int y, const Vector2& size) {
+        SetClipRect(x, y, static_cast<int>(size.x), static_cast<int>(size.y));
+    }
+
+    void SetClipRect(const Vector2& pos, const Vector2& size) {
+        SetClipRect(static_cast<int>(pos.x), static_cast<int>(pos.y),
+            static_cast<int>(size.x), static_cast<int>(size.y));
+    }
+
+    void SetClipRect(const Vector4& trans) {
+        SetClipRect(static_cast<int>(trans.x), static_cast<int>(trans.y),
+            static_cast<int>(trans.z), static_cast<int>(trans.w));
+    }
+
+    void SetClipRect(const SDLCore::Rect& rect) {
+        SetClipRect(rect.x, rect.y, rect.w, rect.h);
+    }
+
+    void ResetClipRect() {
+        auto renderer = GetActiveRenderer("ResetClipRect");
+        if (!renderer)
+            return;
+
+        if (!SDL_SetRenderClipRect(renderer.get(), nullptr)) {
+            Log::Error("SDLCore::Renderer::ResetClipRect: Failed to reset clipRect: {}", SDL_GetError());
         }
     }
 
